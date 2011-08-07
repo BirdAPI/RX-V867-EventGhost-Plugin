@@ -180,19 +180,7 @@ def toggle_radio_amfm():
     
 def set_radio_band(band):
     send_xml('<YAMAHA_AV cmd="PUT"><Tuner><Play_Control><Tuning><Band>%s</Band></Tuning></Play_Control></Tuner></YAMAHA_AV>' % band)
-     
-def next_radio_preset_old():
-    if is_radio_on():
-        oldpreset = get_int_tuner_param('Preset_Sel')
-        preset = oldpreset + 1
-        set_radio_preset(preset)
-        count = get_radio_preset_count()
-        if preset > count:
-            preset = 1
-            set_radio_preset(preset)
-    else:
-        change_source('TUNER')
-
+            
 def next_radio_preset():
     oldpreset = get_int_tuner_param('Preset_Sel')
     preset = oldpreset + 1
@@ -204,18 +192,17 @@ def next_radio_preset():
             set_radio_preset(preset)
     else:
         change_source('TUNER')
-        
+
 def previous_radio_preset():
+    oldpreset = get_int_tuner_param('Preset_Sel')
+    preset = oldpreset - 1
+    set_radio_preset(preset)
     if is_radio_on():
-        oldpreset = get_int_tuner_param('Preset_Sel')
-        preset = oldpreset - 1
-        set_radio_preset(preset)
-        count = get_radio_preset_count()
         if preset < 1:
-            preset = count
+            preset = get_radio_preset_count()
             set_radio_preset(preset)
     else:
-        change_source('TUNER')    
+        change_source('TUNER') 
 
 def is_radio_on():
     return get_string_param('Input_Sel') == "TUNER"
