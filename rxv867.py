@@ -194,8 +194,17 @@ def next_radio_preset_old():
         change_source('TUNER')
 
 def next_radio_preset():
-	
-		
+    oldpreset = get_int_tuner_param('Preset_Sel')
+    preset = oldpreset + 1
+    set_radio_preset(preset)
+    if is_radio_on():
+        count = get_radio_preset_count()
+        if preset > count:
+            preset = 1
+            set_radio_preset(preset)
+    else:
+        change_source('TUNER')
+        
 def previous_radio_preset():
     if is_radio_on():
         oldpreset = get_int_tuner_param('Preset_Sel')
@@ -233,7 +242,13 @@ def get_radio_preset_count():
         else:
             done = True
     return count
-        
+
+def main():
+    next_radio_preset()
+    
+if __name__ == "__main__":
+    main()
+    
 class RXV867Client:
     def __init__(self):
         print "Init"
