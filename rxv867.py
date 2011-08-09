@@ -250,6 +250,10 @@ class RXV867Client:
             increase_volume()
         elif msg == 'VolumeDown':
             decrease_volume()
+        elif msg.startswith('VolumeUp_'):
+            increase_volume(float(msg.replace('VolumeUp_', '')))
+        elif msg.startswith('VolumeDown_'):
+            decrease_volume(float(msg.replace('VolumeDown_', '')))
         elif msg == 'ToggleMute':
             toggle_mute()
         elif msg == 'PowerOn':
