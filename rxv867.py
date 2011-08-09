@@ -5,20 +5,19 @@ import httplib
 import urllib
 import re
 
-ACTION_EXECBUILTIN = 0x01
-ACTION_BUTTON      = 0x02
-
+# Receiver internet connection info
 IP_ADDRESS = "192.168.1.22"
 PORT = "80"
 
-def print_status():
-    print get_status()
+# EventGhost Constnats
+ACTION_EXECBUILTIN = 0x01
+ACTION_BUTTON = 0x02
 
-def print_tuner_status():
-    print get_tuner_status()
-
-def print_tuner_presets():
-    print get_tuner_presets()
+# Yamaha request xml constants
+BASIC_STATUS_XML = '<YAMAHA_AV cmd="GET"><Main_Zone><Basic_Status>GetParam</Basic_Status></Main_Zone></YAMAHA_AV>'
+TUNER_STATUS_XML = '<YAMAHA_AV cmd="GET"><Tuner><Play_Info>GetParam</Play_Info></Tuner></YAMAHA_AV>'
+TUNER_PRESETS_XML = '<YAMAHA_AV cmd="GET"><Tuner><Play_Control><Preset><Data>GetParam</Data></Preset></Play_Control></Tuner></YAMAHA_AV>'
+CONFIG_XML = '<YAMAHA_AV cmd="GET"><System><Config>GetParam</Config></System></YAMAHA_AV>'
     
 def get_xml(XML):
     conn = httplib.HTTPConnection("%s:%s" % ( IP_ADDRESS, PORT ))
@@ -30,14 +29,17 @@ def get_xml(XML):
     conn.close()
     return rval
 
-def get_status():
-    return get_xml('<YAMAHA_AV cmd="GET"><Main_Zone><Basic_Status>GetParam</Basic_Status></Main_Zone></YAMAHA_AV>')
+def get_basic_status():
+    return get_xml(BASIC_STATUS_XML)
 
 def get_tuner_status():
-    return get_xml('<YAMAHA_AV cmd="GET"><Tuner><Play_Info>GetParam</Play_Info></Tuner></YAMAHA_AV>')
+    return get_xml(TUNER_STATUS_XML)
 
 def get_tuner_presets():
-    return get_xml('<YAMAHA_AV cmd="GET"><Tuner><Play_Control><Preset><Data>GetParam</Data></Preset></Play_Control></Tuner></YAMAHA_AV>')
+    return get_xml(TUNER_PRESETS_XML)
+
+def get_config():
+    return get_xml(CONFIG_XML)
     
 def send_xml(XML):
     conn = httplib.HTTPConnection("192.168.1.22:80")
@@ -125,7 +127,7 @@ def get_int_param(param):
     return int(get_string_param(param))
     
 def get_string_param(param):
-    xml = get_status()
+    xml = get_basic_status()
     xmldoc = minidom.parseString(xml)
     value = xmldoc.getElementsByTagName(param)[0].firstChild.data
     return value
@@ -221,7 +223,7 @@ def get_radio_preset_count():
     xmldoc = minidom.parseString(xml)
     count = 0
     done = False
-    while ((not done) and count <= 40):
+    while not done and count <= 40:
         num = "Number_%s" % (count + 1)
         value = xmldoc.getElementsByTagName(num)[0].getElementsByTagName('Status')[0].firstChild.data
         if value == 'Exist':
@@ -230,8 +232,11 @@ def get_radio_preset_count():
             done = True
     return count
 
+def set_scene(scene_num):
+    send_xml('<YAMAHA_AV cmd="PUT"><Main_Zone><Scene><Scene_Load>Scene %i</Scene_Load></Scene></Main_Zone></YAMAHA_AV>' % scene_num)
+    
 def main():
-    next_radio_preset()
+    set_scene('Scene 4')
     
 if __name__ == "__main__":
     main()
@@ -240,75 +245,52 @@ class RXV867Client:
     def __init__(self):
         print "Init"
 
-    def send_action(self, msg = "", type = ACTION_EXECBUILTIN):
+    def send_action(self, msg = '', type = ACTION_EXECBUILTIN):
         if msg == 'VolumeUp':
             increase_volume()
         elif msg == 'VolumeDown':
             decrease_volume()
         elif msg == 'ToggleMute':
             toggle_mute()
-        elif msg == "PowerOn":
+        elif msg == 'PowerOn':
             power_on()
-        elif msg == "PowerOff":
+        elif msg == 'PowerOff':
             power_off()
-        elif msg == "PowerStandby":
+        elif msg == 'PowerStandby':
             power_standby()    
-        elif msg == "ToggleOnStandby":
+        elif msg == 'ToggleOnStandby':
             toggle_on_standby()  
-        elif msg == "Source_HDMI1":
-            change_source("HDMI1")
-        elif msg == "Source_HDMI2":
-            change_source("HDMI2")
-        elif msg == "Source_HDMI3":
-            change_source("HDMI3")
-        elif msg == "Source_HDMI4":
-            change_source("HDMI4")
-        elif msg == "Source_HDMI5":
-            change_source("HDMI5")
-        elif msg == "Source_AV1":
-            change_source("AV1")
-        elif msg == "Source_AV2":
-            change_source("AV2")
-        elif msg == "Source_AV3":
-            change_source("AV13")
-        elif msg == "Source_AV4":
-            change_source("AV4")
-        elif msg == "Source_AV5":
-            change_source("AV5")
-        elif msg == "Source_AV6":
-            change_source("AV6")
-        elif msg == "Source_Radio":
-            change_source("TUNER")
-        elif msg == "Source_V_AUX":
-            change_source("V-AUX")
-        elif msg == "Straight":
+        elif msg.startswith('Source_'):
+            change_source(msg.replace('Source_', ''))
+        elif msg == 'Straight':
             straight()
-        elif msg == "SurroundDecode":
+        elif msg == 'SurroundDecode':
             surround_decode()
-        elif msg == "ToggleStraightAndDecode":
+        elif msg == 'ToggleStraightAndDecode':
             toggle_straight_decode()
-        elif msg == "ToggleEnhancer":
+        elif msg == 'ToggleEnhancer':
             toggle_enhancer()
-        elif msg == "PreviousSource":
+        elif msg == 'PreviousSource':
             next_source()
-        elif msg == "NextSource":
+        elif msg == 'NextSource':
             previous_source()
-        elif msg == "ToggleSleep":
+        elif msg == 'ToggleSleep':
             toggle_sleep()
-        elif msg == "NextRadioPreset":
+        elif msg == 'NextRadioPreset':
             next_radio_preset()
-        elif msg == "PreviousRadioPreset":
+        elif msg == 'PreviousRadioPreset':
             previous_radio_preset()
-        elif msg == "ToggleRadioAMFM":
+        elif msg == 'ToggleRadioAMFM':
             toggle_radio_amfm();
-        elif msg == "RadioAutoFeqUp":
+        elif msg == 'RadioAutoFeqUp':
             auto_radio_freq('Up')
-        elif msg == "RadioAutoFreqDown":
+        elif msg == 'RadioAutoFreqDown':
             auto_radio_freq('Down')
-        elif msg == "RadioFeqUp":
+        elif msg == 'RadioFeqUp':
             manual_radio_freq('Up')
-        elif msg == "RadioFreqDown":
+        elif msg == 'RadioFreqDown':
             manual_radio_freq('Down')
-            
-            
+        elif msg.startswith('Scene'):
+            set_scene(int(msg.replace('Scene', '')))
+           
             
