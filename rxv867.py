@@ -183,29 +183,23 @@ def toggle_radio_amfm():
 def set_radio_band(band):
     send_xml('<YAMAHA_AV cmd="PUT"><Tuner><Play_Control><Tuning><Band>%s</Band></Tuning></Play_Control></Tuner></YAMAHA_AV>' % band)
             
-def next_radio_preset():
+def modify_radio_preset(diff, turn_on, wrap):
     oldpreset = get_int_tuner_param('Preset_Sel')
-    preset = oldpreset + 1
+    preset = oldpreset + diff
     set_radio_preset(preset)
-    if is_radio_on():
+    if turn_on:
+        is_on = is_radio_on
+        if not is_on:
+            change_source('TUNER')
+    if wrap and (not turn_on or is_on):
         count = get_radio_preset_count()
-        if preset > count:
+        if diff > 0 and preset > count:
             preset = 1
             set_radio_preset(preset)
-    else:
-        change_source('TUNER')
-
-def previous_radio_preset():
-    oldpreset = get_int_tuner_param('Preset_Sel')
-    preset = oldpreset - 1
-    set_radio_preset(preset)
-    if is_radio_on():
-        if preset < 1:
-            preset = get_radio_preset_count()
+        elif diff < 0 and preset < 1:
+            preset = count
             set_radio_preset(preset)
-    else:
-        change_source('TUNER') 
-
+        
 def is_radio_on():
     return get_string_param('Input_Sel') == "TUNER"
         
@@ -236,7 +230,7 @@ def set_scene(scene_num):
     send_xml('<YAMAHA_AV cmd="PUT"><Main_Zone><Scene><Scene_Load>Scene %i</Scene_Load></Scene></Main_Zone></YAMAHA_AV>' % scene_num)
     
 def main():
-    set_scene('Scene 4')
+    print "MAIN"
     
 if __name__ == "__main__":
     main()
@@ -281,9 +275,9 @@ class RXV867Client:
         elif msg == 'ToggleSleep':
             toggle_sleep()
         elif msg == 'NextRadioPreset':
-            next_radio_preset()
+            modify_radio_preset(1, True, True)
         elif msg == 'PreviousRadioPreset':
-            previous_radio_preset()
+            modify_radio_preset(-1, True, True)
         elif msg == 'ToggleRadioAMFM':
             toggle_radio_amfm();
         elif msg == 'RadioAutoFeqUp':
