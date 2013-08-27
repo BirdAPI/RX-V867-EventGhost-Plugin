@@ -42,7 +42,7 @@ def get_config():
     return get_xml(CONFIG_XML)
     
 def send_xml(XML):
-    conn = httplib.HTTPConnection("192.168.1.22:80")
+    conn = httplib.HTTPConnection("%s:%s" % ( IP_ADDRESS, PORT ))
     headers = { "Content-type": "text/xml" }
     conn.request("POST", "/YamahaRemoteControl/ctrl", "", headers)
     conn.send(XML)
