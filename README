@@ -1,3 +1,3 @@
 NOTICE:
 
-Before use, open "rxv867.py" file with a text editor and change the line "IP_ADDRESS = ..." to point to the ip address or host name of your receiver.
+This project is deprecated, please visit the new one at: https://github.com/BirdAPI/yamaha-network-receivers
